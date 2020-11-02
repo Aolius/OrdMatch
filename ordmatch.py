@@ -1,14 +1,7 @@
 import torch
 import torch.nn as nn
-import numpy as np
-import torch.optim as optim
 from torch.autograd import Variable
-# from img_feature_extractor import feature_extractor_resnet152
-# import pretrainedmodels
-# import pretrainedmodels.utils as utils
-import os
 
-from torch.nn.utils.weight_norm import weight_norm
 
 def masked_softmax(att, p_len, max_p_len, q_len, max_q_len, mask_value=-2 ** 32 + 1):
 
@@ -47,67 +40,6 @@ def att_mask(p_len, max_p_len, q_len, max_q_len, mask_value=-2 ** 32 + 1):
 
     return mask
 
-def get_img_len(img):
-    return torch.sum(torch.sum(img, dim=-1) != 0, dim=-1)
-
-# class MatchNet(nn.Module):
-#     def __init__(self, mem_dim, dropoutP):
-#         super(MatchNet, self).__init__()
-#         self.map_linear = nn.Linear(4*mem_dim, mem_dim)
-#         self.map_linear_2 = nn.Linear(4 * mem_dim, mem_dim)
-#
-#     def forward(self, inputs, mask_value=0):
-#
-#         C_s, C_len, C_s_len, R_s, R_len = inputs
-#
-#         #proj_p: H^p
-#         #proj_q: H^a
-#         #according to the paper, here should be trans_q instead of proj_q to be multiplied, for unknown reasons
-#         att_weights = torch.einsum("bsik,bjk->bsij",(C_s, R_s))
-#         p_att, q_att = masked_softmax(att_weights, C_s_len, C_s.size(-2), R_len, R_s.size(-2))
-#
-#         C_d = torch.einsum("bsij,bjk->bsik",(p_att, R_s))
-#         R_d, _ = torch.max(torch.einsum("bsij,bsik->bsjk",(q_att, C_s)), dim=1)
-#
-#         step_att = torch.einsum('bsk,bjk->bsj', (torch.max(C_d, dim=-2)[0], R_s))
-#         mask = att_mask(C_len, C_d.size(-3), R_len, R_s.size(-2))
-#         step_att = mask * step_att + mask_value * mask
-#        # step_att = torch.nn.functional.softmax(mask * step_att + mask_value * mask, dim=-2) #(batch, step, hint)
-#         _, max_index = torch.max(step_att, dim=1) #(batch, hint)
-#         all_diff= []
-#         for i in range(step_att.size(2) - 1): #(do not distract final hint)
-#             diff = step_att[:,:,i].unsqueeze(2) - step_att[:,:,i+1:] #(batch, step, num_hint-i)
-#             mean_diff = diff.mean(dim=2)  #(batch, step)
-#             all_diff.append(mean_diff)
-#         all_diff = torch.stack(all_diff, dim=-1) #(batch, step,, hint-1)
-#         # make mask according to max_index
-#         mask = torch.arange(step_att.size(1)).unsqueeze(0).unsqueeze(2).expand_as(step_att).cuda() < max_index.unsqueeze(1)
-#         all_diff = all_diff * mask[:,:,:-1].float() #(batch, step,, hint-1)
-#         all_diff = all_diff.mean(dim=1) #(batch, hint-1)
-#         score = all_diff.sum(dim=1)
-#        # step_att.register_hook(lambda g: print(g))
-#
-#
-#
-#    #     step_att = torch.einsum('bmi,bnj->bmnij', (step_att, step_att))
-#    #     risk = torch.sum(torch.triu(torch.sum(torch.triu(step_att, diagonal=1),dim=[-1,-2]), diagonal=1), dim=[-1,-2])
-#    #
-#    #      C_d = torch.max(C_d, dim=1)[0]
-#    #
-#    #      C_s_max, _ = torch.max(C_s,dim=1)
-#    #      all_con_C = torch.cat([C_s_max,C_d,C_d-C_s_max,C_d*C_s_max], dim=-1)
-#    #      all_con_R = torch.cat([R_s, R_d, R_d - R_s, R_d * R_s], dim=-1)
-#    #      #all_con: (10*4, 23*50, 600).
-#    #
-#    #      C_l = self.map_linear(all_con_C)
-#    #      R_l = self.map_linear(all_con_R)
-#    #
-#    #      # C_v, _= torch.max(C_l, dim=1)
-#    #      # R_v, _ = torch.max(R_l, dim=1)
-#    #
-#    #      output = self.map_linear_2(torch.cat([torch.mean(C_l, dim=1), torch.max(C_l, dim=1)[0], torch.mean(R_l, dim=1), torch.max(R_l, dim=1)[0]], dim=-1))
-#
-#         return score
 
 def masked_softmax_2(att, p_len, max_p_len, q_len, max_q_len, mask_value=-2 ** 32 + 1):
 
