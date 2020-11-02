@@ -100,9 +100,3 @@ for iter in range(iterations):
     #     for param_group in optimizer.param_groups:
     #         param_group['lr'] *= 0.95
 
-
-# model, optimizer, criterion = torch.load('/hdd/liuao/recipe-data/data/trainedmodel/'+args.task+'_save_best_v2.pt')
-# score = evaluation(model, optimizer, criterion, corpus, args.cuda, args.batch_size, dataset='test')
-# with open('/hdd/liuao/recipe-data/data/trainedmodel/'+args.task+'_record_v2.txt', 'a', encoding='utf-8') as fpw:
-#     fpw.write('TEST accuracy:\t' + str(score) + '\n')
-# print('TEST accuracy: ' + str(score))

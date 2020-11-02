@@ -1,7 +1,6 @@
 import os
 import json
 import torch
-import h5py
 import numpy as np
 
 def prep_glove(args):
