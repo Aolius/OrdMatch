@@ -9,12 +9,11 @@ Code for CIKM2019 Short Paper: [Machine Reading Comprehension: Matching and Orde
 
 ### Datasets
 - Paper: [RecipeQA: A Challenge Dataset for Multimodal Comprehension of Cooking Recipes](https://arxiv.org/abs/1809.00812)
-- [Training data](https://vision.cs.hacettepe.edu.tr/files/recipeqa/train.json)
-- [Validation data](https://vision.cs.hacettepe.edu.tr/files/recipeqa/val.json)
+
 
 ### Data Preprocessing
-1. Download the original data files `train.json/val.json` to `root/data/`.
-2. Use root/preprocess.py to extract json files for `textual cloze` task. Rename them as `TC\_train.json/TC\_val.json` and place them to `root/data`.
+1. Download the original data files [`train.json`](https://vision.cs.hacettepe.edu.tr/files/recipeqa/train.json) and [`val.json`](https://vision.cs.hacettepe.edu.tr/files/recipeqa/val.json) to `root/data/`.
+2. Use `root/preprocess.py` to extract json files for `textual cloze(TC)` task. Rename them as `TC_train.json/TC_val.json` and place them to `root/data`.
 3. Download the [Activity Ordering data (AO8/AO24)](https://drive.google.com/drive/folders/1D7r5laxXduwnBeN0DSFjqRl4BGyd3gzE?usp=sharing) to `root/data`.
 
 ### Usage
