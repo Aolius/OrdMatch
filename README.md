@@ -13,7 +13,7 @@ Code for CIKM2019 Short Paper: [Machine Reading Comprehension: Matching and Orde
 
 ### Data Preprocessing
 1. Download the original data files [`train.json`](https://vision.cs.hacettepe.edu.tr/files/recipeqa/train.json) and [`val.json`](https://vision.cs.hacettepe.edu.tr/files/recipeqa/val.json) to `root/data/`.
-2. Use `root/preprocess.py` to extract json files for `textual cloze(TC)` task. Rename them as `TC_train.json/TC_val.json` and place them to `root/data`.
+2. Run ```python root/preprocess.py```. This will generate `textual_cloze_train.json` and `textual_cloze_val.json` to `root/data`. Rename them as `TC_train.json/TC_val.json`.
 3. Download the [Activity Ordering data (AO8/AO24)](https://drive.google.com/drive/folders/1D7r5laxXduwnBeN0DSFjqRl4BGyd3gzE?usp=sharing) to `root/data`.
 
 ### Usage
