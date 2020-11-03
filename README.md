@@ -37,7 +37,8 @@ python main_AO24.py --batch_size 5 --lamda 0.01 #for AO24 task
 For detailed configuration, please refer to `root/config.py`.
 
 ### Hyper-parameter
-For hyper-parameter `\lambda`, we recommend choosing a value between 0.01~0.1 for best results.
+For hyper-parameter `\lambda`, we recommend choosing a value between 0.01~0.1 for best results. Manul tuning of this hyperparameter is necessary.
+To reproduce our results, please download the embedding data as mentioned above and follow the default configuration. 
 
 ### Citation
 Please consider citing this paper if you found this project useful.
