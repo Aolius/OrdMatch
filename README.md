@@ -15,14 +15,14 @@ Code for CIKM2019 Short Paper: [Machine Reading Comprehension: Matching and Orde
 ### Data Preprocessing
 1. Download the original data files [`train.json`](https://vision.cs.hacettepe.edu.tr/files/recipeqa/train.json) and [`val.json`](https://vision.cs.hacettepe.edu.tr/files/recipeqa/val.json) to `root/data/`.
 2. Download and unzip the `glove.840B.300d.zip`to `root/data/embedding/`.
-2. Run ```python root/preprocess.py```. This will generate `textual_cloze_train.json` and `textual_cloze_val.json` to `root/data`. Rename them as `TC_train.json/TC_val.json`.
-3. Download the [Activity Ordering data](https://drive.google.com/drive/folders/1D7r5laxXduwnBeN0DSFjqRl4BGyd3gzE?usp=sharing):
+3. Run ```python root/preprocess.py```. This will generate `textual_cloze_train.json` and `textual_cloze_val.json` to `root/data`. Rename them as `TC_train.json/TC_val.json`.
+4. Download the [Activity Ordering data](https://drive.google.com/drive/folders/1D7r5laxXduwnBeN0DSFjqRl4BGyd3gzE?usp=sharing):
 >1. AO24_train.json
 >2. AO24_val.json
 >3. AO8_train.json
 >4. AO8_val.json          to `root/data/`.
 
-And download the [embedding data](https://drive.google.com/drive/folders/1d2n87K2duPAWeoLpa2yG8IBKPftjNaTw?usp=sharing)  (optional)
+5. download the [embedding data](https://drive.google.com/drive/folders/1d2n87K2duPAWeoLpa2yG8IBKPftjNaTw?usp=sharing)  (optional)
 >1. embeddings.pt
 >2. word2idx.pt
 >3. idx2word.pt
@@ -39,7 +39,7 @@ For detailed configuration, please refer to `root/config.py`.
 ### Hyper-parameter
 For hyper-parameter `\lambda`, we recommend choosing a value between 0.01~0.1 for best results.
 
-### References
+### Citation
 Please consider citing this paper if you found this project useful.
 
 ```
