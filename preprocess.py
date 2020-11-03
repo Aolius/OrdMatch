@@ -93,7 +93,7 @@ def data_shuffle():
 
 
 
-def preprocess(task='textual_cloze', args):
+def preprocess(task='textual_cloze', args=args):
     print('Preprocessing the dataset ' + task + '...')
     dataset_names = ['train', 'val']
     for dataset_name in dataset_names:
@@ -234,7 +234,7 @@ if __name__ == '__main__':
     #preprocess original data file to get train/val data file for textual cloze task
     preprocess('textual_cloze',args)
     #shuffle original data file to create train/val data file for activity ordering task
-    data_shuffle()
+    # data_shuffle()
 
 
 
