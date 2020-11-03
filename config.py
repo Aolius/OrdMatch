@@ -2,7 +2,7 @@ import argparse
 
 
 parser = argparse.ArgumentParser(description='RecipeQA')
-parser.add_argument('--task', type=str, default='textual_cloze')
+parser.add_argument('--task', type=str, default='TC')
 parser.add_argument('--emb_dim', type=int, default=300, help='size of word embeddings')
 parser.add_argument('--hid_dim', type=int, default=150, help='hidden size')
 parser.add_argument('--lr',type=float,default=1e-3,help='learning rate')
@@ -23,4 +23,3 @@ parser.add_argument('--data_path',type=str, default='./data')
 
 args = parser.parse_args()
 
-args.task = 'AO8'
