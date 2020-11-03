@@ -9,6 +9,7 @@ from corpus import Corpus
 from config import args
 from evaluate import evaluation, accuracy
 
+args.task = 'AO8'
 os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
 torch.set_num_threads(3)
 torch.manual_seed(args.seed)
@@ -39,15 +40,15 @@ total_loss1 = 0
 total_loss2 = 0
 
 interval = args.interval
-save_interval = len(corpus.data_all['train']) // args.batch_size
+save_interval = len(corpus.data_all['AO8_train']) // args.batch_size
 
 best_dev_score = -99999
-iterations = args.epochs*len(corpus.data_all['train']) // args.batch_size
+iterations = args.epochs*len(corpus.data_all['AO8_train']) // args.batch_size
 print('max iterations: '+str(iterations))
 
 for iter in range(iterations):
     optimizer.zero_grad()
-    data = corpus.get_batch_attack(args.batch_size, 'train',div=True)
+    data = corpus.get_batch_attack(args.batch_size, 'AO8_train',div=True)
     output1, output2, att = model(data)
     labels = data[2].cuda() if args.cuda else data[2]
     _, pred = output1.max(1)
@@ -69,7 +70,7 @@ for iter in range(iterations):
         cur_loss2 = total_loss2 / interval if iter != 0 else total_loss2
         elapsed = time.time() - start_time
         print('| iterations {:3d} | start_id {:3d} | ms/batch {:5.2f} | loss {:5.3f} loss1 {:5.3f} loss2 {:5.3f}   '.format(
-        iter, corpus.start_id['train'], elapsed * 1000 / interval, cur_loss, cur_loss1, cur_loss2))
+        iter, corpus.start_id['AO8_train'], elapsed * 1000 / interval, cur_loss, cur_loss1, cur_loss2))
         total_loss = 0
         total_loss1 = 0
         total_loss2 = 0
@@ -82,7 +83,7 @@ for iter in range(iterations):
         if not os.path.exists(save_path):
             os.mkdir(save_path)
         torch.save([model, optimizer, criterion], os.path.join(save_path, f'save_8_{args.lamda}.pt'))
-        score = evaluation(model, corpus, args.task, args.batch_size, dataset='val',div=True, reg=True)
+        score = evaluation(model, corpus, args.task, args.batch_size, dataset='AO8_val',div=True, reg=True)
         print('DEV accuracy: ' + str(score))
         with open(os.path.join(save_path, f'record_8_{args.lamda}.txt'), 'a', encoding='utf-8') as fpw:
             if iter == 0: fpw.write(str(args) + '\n')
@@ -91,9 +92,5 @@ for iter in range(iterations):
         if score > best_dev_score:
             best_dev_score = score
             torch.save([model, optimizer, criterion], os.path.join(save_path, f'save_best_8_{args.lamda}.pt'))
-
-    # if (iter+1) % (len(corpus.data_all['train']) // args.batch_size) == 0:
-    #     for param_group in optimizer.param_groups:
-    #         param_group['lr'] *= 0.95
 
 

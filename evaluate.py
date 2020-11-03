@@ -6,7 +6,7 @@ def accuracy(ground_truth, prediction):
     accuracy = float( (ground_truth==prediction).float().mean(0) )
     return accuracy
 
-def evaluation(model, corpus, task, batch_size, dataset='val',div=False, reg=False):
+def evaluation(model, corpus, task, batch_size, dataset='val',div=True, reg=True):
 
     model.eval()
     labels_all = []

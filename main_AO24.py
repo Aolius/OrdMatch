@@ -4,7 +4,6 @@ import torch.nn as nn
 import torch.optim as optim
 import os
 from ordmatch import OrdMatch
-
 from corpus import Corpus
 from config import args
 from evaluate import evaluation, accuracy
@@ -48,7 +47,7 @@ print('max iterations: '+str(iterations))
 
 for iter in range(iterations):
     optimizer.zero_grad()
-    data = corpus.get_batch_attack(args.batch_size, 'train',div=True)
+    data = corpus.get_batch_attack(args.batch_size, 'AO24_train',div=True)
     output1, output2, att = model(data)
 
 
@@ -85,7 +84,8 @@ for iter in range(iterations):
         if not os.path.exists(save_path):
             os.mkdir(save_path)
         torch.save([model, optimizer, criterion], os.path.join(save_path, f'save_24_{args.lamda}.pt'))
-        score = evaluation(model, corpus, args.task, args.batch_size, dataset='val', div=True, reg=True)
+        score = evaluation(model, corpus, args.task, args.batch_size, dataset='AO24_val', div=True, reg=True)
+
         print('DEV accuracy: ' + str(score))
         with open(os.path.join(save_path, f'record_24_{args.lamda}.txt'), 'a', encoding='utf-8') as fpw:
             if iter == 0: fpw.write(str(args) + '\n')
@@ -95,9 +95,6 @@ for iter in range(iterations):
             best_dev_score = score
             torch.save([model, optimizer, criterion], os.path.join(save_path, f'save_best_24_{args.lamda}.pt'))
 
-    # if (iter+1) % (len(corpus.data_all['train']) // args.batch_size) == 0:
-    #     for param_group in optimizer.param_groups:
-    #         param_group['lr'] *= 0.95
 
 
 

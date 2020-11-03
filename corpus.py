@@ -1,6 +1,7 @@
 import os
 import json
 import torch
+import h5py
 import numpy as np
 
 def prep_glove(args):
@@ -25,24 +26,21 @@ def prep_glove(args):
             assert (vec.size(0) == 300)
     assert len(tensors) == len(ivocab)
     tensors = torch.cat(tensors).view(len(ivocab), 300)
-    emb_path = os.path.join(glove_path, args.task, 'glove_emb.pt')
+    emb_path = os.path.join(glove_path, 'glove_emb.pt')
     with open(emb_path, 'wb') as fpw:
         torch.save([tensors, vocab, ivocab], fpw)
 
 
 class Dictionary(object):
     def __init__(self, args):
-        self.args = args
         self.task = args.task
-        self.data_dir = args.data_path
-        self.file_path = os.path.join(self.data_dir, 'embedding', self.task)
-        if not os.path.exists(self.file_path):
-            os.mkdir(self.file_path)
-        filename = os.path.join(self.file_path, 'word2idx.pt')
+        self.data_dir = args.data_path + '/embedding/'
+        self.data_all_dir = args.data_path
+        filename = os.path.join(self.data_dir, 'word2idx.pt')
         if os.path.exists(filename):
-            self.word2idx = torch.load(os.path.join(self.file_path, 'word2idx.pt'))
-            self.idx2word = torch.load(os.path.join(self.file_path, 'idx2word.pt'))
-            self.word2idx_count = torch.load(os.path.join(self.file_path, 'word2idx_count.pt'))
+            self.word2idx = torch.load(os.path.join(self.data_dir,  'word2idx.pt'))
+            self.idx2word = torch.load(os.path.join(self.data_dir,  'idx2word.pt'))
+            self.word2idx_count = torch.load(os.path.join(self.data_dir,  'word2idx_count.pt'))
         else:
             self.word2idx = {'<<padding>>':0, '<<unk>>':1}
             self.word2idx_count = {'<<padding>>':0, '<<unk>>':0}
@@ -51,24 +49,24 @@ class Dictionary(object):
             self.build_dict('train')
             self.build_dict('val')
 
-            torch.save(self.word2idx, os.path.join(self.file_path, 'word2idx.pt'))
-            torch.save(self.idx2word, os.path.join(self.file_path, 'idx2word.pt'))
-            torch.save(self.word2idx_count, os.path.join(self.file_path, 'word2idx_count.pt'))
-        filename_emb = os.path.join(self.file_path, 'embeddings.pt')
+            torch.save(self.word2idx, os.path.join(self.data_dir,  'word2idx.pt'))
+            torch.save(self.idx2word, os.path.join(self.data_dir, 'idx2word.pt'))
+            torch.save(self.word2idx_count, os.path.join(self.data_dir,  'word2idx_count.pt'))
+        filename_emb = os.path.join(self.data_dir, 'embeddings.pt')
         if os.path.exists(filename_emb):
             self.embs = torch.load(filename_emb)
         else:
             self.embs = self.build_emb(all_vocab=True)
 
     def build_emb(self, all_vocab=False):
-        word2idx = torch.load(os.path.join(self.file_path, 'word2idx.pt'))
-        idx2word = torch.load(os.path.join(self.file_path, 'idx2word.pt'))
+        word2idx = torch.load(os.path.join(self.data_dir, 'word2idx.pt'))
+        idx2word = torch.load(os.path.join(self.data_dir,  'idx2word.pt'))
         emb = torch.FloatTensor(len(idx2word), 300).zero_()
         print('loading Glove ...')
         print('Raw vocabulary size: ', str(len(idx2word)))
 
-        if not os.path.exists(os.path.join(self.file_path,'glove_emb.pt')): prep_glove(self.args)
-        glove_tensors, glove_vocab, glove_ivocab = torch.load(os.path.join(self.file_path,'glove_emb.pt'))
+        if not os.path.exists(os.path.join(self.data_dir, 'glove_emb.pt')): prep_glove()
+        glove_tensors, glove_vocab, glove_ivocab = torch.load(os.path.join(self.data_dir, 'glove_emb.pt'))
         if not all_vocab:
             self.word2idx = {'<<padding>>': 0, '<<unk>>': 1}
             self.idx2word = ['<<padding>>', '<<unk>>']
@@ -86,9 +84,9 @@ class Dictionary(object):
         print("Number of words not appear in glove: ", len(idx2word) - count)
         print("Vocabulary size: ", len(self.idx2word))
 
-        torch.save(emb, os.path.join(self.file_path, 'embeddings.pt'))
-        torch.save(self.word2idx, os.path.join(self.file_path, 'word2idx.pt'))
-        torch.save(self.idx2word, os.path.join(self.file_path, 'idx2word.pt'))
+        torch.save(emb, os.path.join(self.data_dir, 'embeddings.pt'))
+        torch.save(self.word2idx, os.path.join(self.data_dir, 'word2idx.pt'))
+        torch.save(self.idx2word, os.path.join(self.data_dir, 'idx2word.pt'))
 
         return emb
 
@@ -104,17 +102,18 @@ class Dictionary(object):
         return self.word2idx[word]
 
     def build_dict(self, dataset):
-        if self.task not in ['textual_cloze','AO8', 'AO24']:
-             assert False, 'the task' + self.task + ' is not supported!'
-        filename = os.path.join(self.data_dir,f'{self.task}_{dataset}.json')
+
+        #use TC's vocabulary for all tasks, since AO8/AO24 are directly generated from TC
+        filename = os.path.join(self.data_all_dir,f'TC_{dataset}.json')
         assert (os.path.exists(filename))
         with open(filename, 'r', encoding='utf-8') as fpr:
             data_all = json.load(fpr)
             for instance in data_all:
-                words = [word for title in instance['question'] for word in title]
-                for option in instance['options']: words += option
-                for step in instance['passage']: words += step
-                for word in words: self.add_word(word)
+                    words = [word for title in instance['question'] for word in title]
+                    for option in instance['options']: words += option
+                    for step in instance['passage']: words += step
+                    for word in words: self.add_word(word)
+
     def __len__(self):
         return len(self.idx2word)
 
@@ -124,27 +123,35 @@ class Dictionary(object):
 class Corpus(object):
     def __init__(self, args):
         self.task = args.task
+        if self.task not in ['TC', 'AO24', 'AO8']:
+             assert False, 'the task' + self.task + ' is not supported!'
         self.dictionary = Dictionary(args)
         self.data_dir = args.data_path
 
+
         self.data_all, self.start_id, self.indices = {}, {}, {}
+
+        #load textual cloze (TC) data
         setnames = ['train', 'val']
         for setname in setnames:
-            self.data_all[setname] = self.load_data(os.path.join(self.data_dir, f'{self.task}_{setname}.json'))
+            self.data_all[setname] = self.load_data(os.path.join(self.data_dir, f'TC_{setname}.json'))
             print(setname, len(self.data_all[setname]))
             self.start_id[setname] = 0
             self.indices[setname] = torch.randperm((len(self.data_all[setname]))) if setname == 'train' else torch.range(0,len(self.data_all[setname]))
+        #load activity ordering (AO8/AO24) data
+        setnames_a = ['AO24_train', 'AO24_val', 'AO8_train', 'AO8_val']
+        for setname_a in setnames_a:
+            self.data_all[setname_a] = self.load_data(os.path.join(self.data_dir, f'{setname_a}.json'))
+            print(setname_a, len(self.data_all[setname_a]))
+            self.start_id[setname_a] = 0
+            self.indices[setname_a] = torch.randperm(
+                (len(self.data_all[
+                         setname_a]))) if setname_a == 'AO24_train' or setname_a == 'AO8_train' else torch.range(0, len(
+                self.data_all[setname_a]))
+
 
 
     def get_batch(self, batch_size, setname, div=True):
-
-        '''get batch for textual cloze task.
-
-        div=True means we input each action phrase as a list of words,
-             e.g., in AO8, we have 4 list of tokens as one option;
-           div=False means we input flatten all the action phrases into one list',
-             e.g., in AO8, we have 1 list of tokens as one option;
-              by default in this paper, we set div=True'''
         if self.start_id[setname] >= len(self.data_all[setname]):
             self.start_id[setname] = 0
             if setname == 'train': self.indices[setname] = torch.randperm(len(self.data_all[setname]))
@@ -168,17 +175,17 @@ class Corpus(object):
         qa_pairs = self.seq2QAtensor(qa_pairs)
         if div:
             qa_pairs_div = self.seq2QADtensor(qa_pairs_div)
+      #  ans = self.seq2Atensor(answers)
         labels = torch.LongTensor(labels)
         if div:
             return [documents, qa_pairs_div, labels]
         return [documents, qa_pairs, labels]
 
-
-    def get_batch_attack(self,batch_size,setname,div=True):
-        '''get batch for activity ordering tasks (AO8/AO24)'''
+    def get_batch_attack(self,batch_size,setname='AO24_train',div=True):
         if self.start_id[setname] >= len(self.data_all[setname]):
             self.start_id[setname] = 0
-            if setname == 'train': self.indices[setname] = torch.randperm(len(self.data_all[setname]))
+            if setname == 'AO24_train' or setname == 'AO8_train': self.indices[setname] = torch.randperm(len(self.data_all[setname]))
+
         end_id = self.start_id[setname] + batch_size if self.start_id[setname] + batch_size < len(
             self.data_all[setname]) else len(self.data_all[setname])
         documents, questions, answers, qa_pairs, qa_pairs_div, labels = [], [], [], [], [], []
@@ -188,19 +195,28 @@ class Corpus(object):
             qa_pairs.append(instance['qa_shuffle'])
             if div:
                 qa_pairs_div.append(instance['qa_divs'])
+
+            # questions.append(instance['question'])
+
             documents.append(instance['passage'])
             labels.append(instance['ground_truth'])
+
+
+
         self.start_id[setname] += batch_size
 
         documents = self.seq2Dtensor(documents)
-        if self.task == 'AO24':
+        if setname == 'AO24_train' or setname == 'AO24_val':
             qa_pairs = self.seq2QAtensor(qa_pairs,option_num=24)
             if div:
                 qa_pairs_div = self.seq2QADtensor(qa_pairs_div)
-        elif self.task == 'AO8':
+        else:
             qa_pairs = self.seq2QAtensor(qa_pairs, option_num=8)
             if div:
                 qa_pairs_div = self.seq2QADtensor(qa_pairs_div,num_options=8)
+
+
+        #  ans = self.seq2Atensor(answers)
         labels = torch.LongTensor(labels)
         if div:
             return [documents, qa_pairs_div, labels]
@@ -208,6 +224,28 @@ class Corpus(object):
 
 
 
+
+
+
+
+
+    def seq2Atensor(self, docs, a_len_bound = 5):
+
+        a_len_max = max([len(a) for doc in docs for a in doc ])
+        a_len_max = min(a_len_max, a_len_bound)
+
+        a_tensor = torch.LongTensor(len(docs), 4, a_len_max).zero_()
+        a_len = torch.LongTensor(len(docs),4).zero_()
+
+        for d_id, doc in enumerate(docs):
+            for a_id, a in enumerate(doc):
+                a_len[d_id][a_id] = len(a)
+                for w_id, word in enumerate(a):
+                    if w_id >= a_len_max: break
+                    a_tensor[d_id][a_id][w_id] = self.dictionary.word2idx.get(word, 1)
+
+
+        return [a_tensor, a_len]
     def seq2QAtensor(self, docs, qa_len_bound = 20, option_num=4):
         '''
 
@@ -253,7 +291,7 @@ class Corpus(object):
 
 
         return [qa_tensor, qa_len]
-    def seq2Dtensor(self, docs, step_num_bound=25, step_len_bound=50):
+    def seq2Dtensor(self, docs, img_list=None, step_num_bound=25, step_len_bound=50, whichset='train'):
         '''
 
         :param docs:  list of size (batch_size, step_num, step_length)
@@ -284,7 +322,29 @@ class Corpus(object):
                     #if word does not exist in dictionary, set it to 1
                     step_tensor[d_id][s_id][w_id] = self.dictionary.word2idx.get(word, 1)
 
-        return step_tensor, doc_len, step_len
+
+        if img_list:
+            if whichset == 'train':
+                img_step_tensor = torch.Tensor(len(docs), step_num_max, 49, 2048).zero_()
+                for d_id, doc in enumerate(img_list):
+                    for step_id, step in enumerate(doc):
+                        if len(step) < 1: continue
+                        img_idx = self.train_img2idx[step[0]]
+                        img_feat = self.train_img[img_idx]
+                        img_step_tensor[d_id][step_id] = torch.from_numpy(img_feat)
+            elif whichset == 'val':
+                img_step_tensor = torch.Tensor(len(docs), step_num_max, 49, 2048).zero_()
+                for d_id, doc in enumerate(img_list):
+                    for step_id, step in enumerate(doc):
+                        if len(step) < 1: continue
+                        img_idx = self.val_img2idx[step[0]]
+                        img_feat = self.val_img[img_idx]
+                        img_step_tensor[d_id][step_id] = torch.from_numpy(img_feat)
+
+
+            return img_step_tensor, [step_tensor, doc_len, step_len]
+        else:
+            return step_tensor, doc_len, step_len
 
 
 
@@ -297,4 +357,3 @@ class Corpus(object):
         with open(data_path, 'r', encoding='utf-8') as fpr:
             data = json.load(fpr)
         return data
-

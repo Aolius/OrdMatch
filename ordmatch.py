@@ -41,6 +41,7 @@ def att_mask(p_len, max_p_len, q_len, max_q_len, mask_value=-2 ** 32 + 1):
     return mask
 
 
+
 def masked_softmax_2(att, p_len, max_p_len, q_len, max_q_len, mask_value=-2 ** 32 + 1):
 
     p_mask = torch.zeros_like(p_len).unsqueeze(-1).expand(size=[p_len.size(0), max_p_len]).clone()
@@ -60,7 +61,7 @@ def masked_softmax_2(att, p_len, max_p_len, q_len, max_q_len, mask_value=-2 ** 3
 
     return p_result, q_result
 class MatchNet(nn.Module):
-    def __init__(self, mem_dim):
+    def __init__(self, mem_dim, dropoutP):
         super(MatchNet, self).__init__()
         self.map_linear = nn.Linear(4*mem_dim, mem_dim)
         self.map_linear_2 = nn.Linear(4 * mem_dim, mem_dim)
@@ -70,10 +71,11 @@ class MatchNet(nn.Module):
     def forward(self, inputs, mask_value=0, topK=0):
 
         C_s, C_len, C_s_len, R_s, R_h, R_len = inputs
+
+
         att_weights = torch.einsum("bsik, bjk->bsij", (C_s, R_s))
 
         p_att, q_att = masked_softmax(att_weights, C_s_len, C_s.size(-2), R_len, R_s.size(-2))
-        #store att matrix for checking
         check = q_att
         C_d = torch.einsum("bsij, bsik->bsjk", (q_att, C_s))
         C_d = torch.einsum("bsjk->bjsk", C_d)
@@ -107,16 +109,18 @@ class MatchNet(nn.Module):
             if not topK:
                 max_diff,_ = diff.min(1)[0].min(1,keepdim=True)
             all_diff.append(max_diff)
-        all_diff = torch.cat(all_diff, dim=1)
+        all_diff = torch.cat(all_diff, dim=1) #(batch, 3)
         all_diff = all_diff.min(dim=1)[0]
 
+
         return dist, all_diff, check
+
+
 class MaskLSTM(nn.Module):
     def __init__(self, in_dim, out_dim, layers=1, batch_first=True, bidirectional=True, dropoutP = 0.3):
         super(MaskLSTM, self).__init__()
        
-        self.lstm_module = nn.LSTM(in_dim, out_dim, layers, batch_first=batch_first, bidirectional=bidirectional,
-                                   dropout=dropoutP)
+        self.lstm_module = nn.LSTM(in_dim, out_dim, layers, batch_first=batch_first, bidirectional=bidirectional, dropout=dropoutP)
         self.drop_module = nn.Dropout(dropoutP)
 
     def forward(self, inputs, return_y=False):
@@ -137,9 +141,7 @@ class MaskLSTM(nn.Module):
 
         output = H * mask
         if return_y:
-            #return only the final hidden state
             return output[:,-1]
-        #return all the hidden states
         return output
 
 
@@ -156,9 +158,9 @@ class OrdMatch(nn.Module):
         self.embs.weight.requires_grad = False
 
         self.encoder = MaskLSTM(self.emb_dim, self.hid_dim, dropoutP=self.dropoutP)
-        self.match_module_text = MatchNet(self.hid_dim * 2)
-        # self.match_module_img = MatchNet(self.hid_dim*2, self.dropoutP)
-        # self.img_mapping = nn.Linear(2048, self.emb_dim)
+        self.match_module_text = MatchNet(self.hid_dim * 2, self.dropoutP)
+        self.match_module_img = MatchNet(self.hid_dim*2, self.dropoutP)
+        self.img_mapping = nn.Linear(2048, self.emb_dim)
         self.rank_module = nn.Linear(self.emb_dim, 1)
         self.hint_mapping = nn.Linear(self.emb_dim, self.emb_dim)
 
@@ -191,12 +193,17 @@ class OrdMatch(nn.Module):
         qa_hidden = self.encoder([qa_mapped.view(qa_embs.size(0)*qa_embs.size(1), qa_embs.size(2), self.emb_dim), qa_len.view(-1)])
         qa_hidden = qa_hidden.view(qa_mapped.size(0), qa_mapped.size(1),qa_mapped.size(2),self.emb_dim)
 
+
+
         score1_match = []
         score2_match = []
         att = []
         for qa, qa_m, qa_len_s in zip(torch.unbind(qa_mapped,dim=1), torch.unbind(qa_hidden,dim=1), torch.unbind(qa_len,dim=1)):
+
+            #out_dim = 600
             # d_hidden:(batch*sent_num, sent_len, dim), qa:(batch, sent_len, dim)
             score1, score2, att_s = self.match_module_text([d_hidden, d_len, d_s_len, qa, qa_m, qa_len_s])
+
             score1_match.append(score1)
             score2_match.append(score2)
             att.append(att_s)
