@@ -8,11 +8,13 @@ Code for CIKM2019 Short Paper: [Machine Reading Comprehension: Matching and Orde
 - NLTK
 
 ### Datasets
-- Paper: [RecipeQA: A Challenge Dataset for Multimodal Comprehension of Cooking Recipes](https://arxiv.org/abs/1809.00812)
+- [RecipeQA: A Challenge Dataset for Multimodal Comprehension of Cooking Recipes](https://arxiv.org/abs/1809.00812)
+- [GloVe: Global Vectors for Word Representation](http://nlp.stanford.edu/data/glove.840B.300d.zip)
 
 
 ### Data Preprocessing
 1. Download the original data files [`train.json`](https://vision.cs.hacettepe.edu.tr/files/recipeqa/train.json) and [`val.json`](https://vision.cs.hacettepe.edu.tr/files/recipeqa/val.json) to `root/data/`.
+2. Download and unzip the `glove.840B.300d.zip`to `root/data/embedding/`.
 2. Run ```python root/preprocess.py```. This will generate `textual_cloze_train.json` and `textual_cloze_val.json` to `root/data`. Rename them as `TC_train.json/TC_val.json`.
 3. Download the [Activity Ordering data (AO8/AO24)](https://drive.google.com/drive/folders/1D7r5laxXduwnBeN0DSFjqRl4BGyd3gzE?usp=sharing) to `root/data`.
 
