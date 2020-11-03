@@ -22,11 +22,11 @@ Code for CIKM2019 Short Paper: [Machine Reading Comprehension: Matching and Orde
 >3. AO8_train.json
 >4. AO8_val.json          to `root/data/`.
 
-5. download the [embedding data](https://drive.google.com/drive/folders/1d2n87K2duPAWeoLpa2yG8IBKPftjNaTw?usp=sharing)  (optional)
+5. Download the [embedding data](https://drive.google.com/drive/folders/1d2n87K2duPAWeoLpa2yG8IBKPftjNaTw?usp=sharing)  (optional)
 >1. embeddings.pt
 >2. word2idx.pt
 >3. idx2word.pt
->4. word2idx_count.pt    to `root/data/embedding`.
+>4. word2idx_count.pt    to `root/data/embedding`. You may also generate the embedding data from the code.
 
 ### Usage
 ```
@@ -37,7 +37,7 @@ python main_AO24.py --batch_size 5 --lamda 0.01 #for AO24 task
 For detailed configuration, please refer to `root/config.py`.
 
 ### Hyper-parameter
-For hyper-parameter `\lambda`, we recommend choosing a value between 0.01~0.1 for best results. Manul tuning of this hyperparameter is necessary.
+Manual tuning of hyper-parameter `\lambda` is necessary. For hyper-parameter `\lambda`, we recommend choosing a value between 0.01~0.1 for best results. 
 To reproduce our results, please download the embedding data as mentioned above and follow the default configuration. 
 
 ### Citation
